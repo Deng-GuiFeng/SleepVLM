@@ -77,14 +77,14 @@ Apply for access and download the EDF files from the [MASS repository](https://b
 
 ```
 data/MASS/
-├── SS1/          # 01-01-0001 PSG.edf, 01-01-0001 Base.edf, ...
-├── SS2/          # 01-02-0001 PSG.edf, 01-02-0001 Base.edf, ...
-├── SS3/          # 01-03-0001 PSG.edf, 01-03-0001 Base.edf, ...
-├── SS4/          # 01-04-0001 PSG.edf, ...
-└── SS5/          # 01-05-0001 PSG.edf, ...
+├── SS1/edfs/     # 01-01-0001 PSG.edf, 01-01-0001 Base.edf, ...
+├── SS2/edfs/     # 01-02-0001 PSG.edf, 01-02-0001 Base.edf, ...
+├── SS3/edfs/     # 01-03-0001 PSG.edf, 01-03-0001 Base.edf, ...
+├── SS4/edfs/     # 01-04-0001 PSG.edf, ...
+└── SS5/edfs/     # 01-05-0001 PSG.edf, ...
 ```
 
-EDF files go directly into each `SS*` directory (not into a subdirectory).
+Place all EDF files into the `edfs/` subdirectory under each subset.
 
 ### 2. Download the base model
 
@@ -237,16 +237,16 @@ SleepVLM/
 ├── data/                              # Data directory (gitignored, user-generated)
 │   └── MASS/
 │       ├── SS1/                       # Held-out test set (53 subjects)
-│       │   ├── *.edf                  #   Raw EDF files (from MASS)
+│       │   ├── edfs/                  #   Raw EDF files (from MASS)
 │       │   └── images/                #   Rendered waveform images
 │       ├── SS2/                       # Phase 1 WPT (19 subjects)
-│       │   ├── *.edf, images/, wpt_features/
+│       │   ├── edfs/, images/, wpt_features/
 │       ├── SS3/                       # Phase 2 SFT (62 subjects)
-│       │   ├── *.edf, images/
+│       │   ├── edfs/, images/
 │       ├── SS4/                       # Phase 1 WPT (40 subjects)
-│       │   ├── *.edf, images/, wpt_features/
+│       │   ├── edfs/, images/, wpt_features/
 │       └── SS5/                       # Phase 1 WPT (26 subjects)
-│           ├── *.edf, images/, wpt_features/
+│           ├── edfs/, images/, wpt_features/
 │
 ├── sleepvlm/                          # Main Python package
 │   ├── __init__.py

@@ -32,18 +32,18 @@ for SS in SS1 SS3; do
     echo ""
     echo "--- Processing MASS-${SS} (labeled) ---"
     python -m sleepvlm.data.preprocess \
-        --input_dir "${DATA_DIR}/MASS/${SS}" \
+        --input_dir "${DATA_DIR}/MASS/${SS}/edfs" \
         --output_dir "${DATA_DIR}/MASS/${SS}/images" \
         --mode labeled \
         --num_workers "${NUM_WORKERS}"
 done
 
-# --- Unlabeled subsets (SS2, SS4, SS5): render without labels + compute band power ---
+# --- Unlabeled subsets (SS2, SS4, SS5): render + compute WPT features ---
 for SS in SS2 SS4 SS5; do
     echo ""
-    echo "--- Processing MASS-${SS} (unlabeled + band power) ---"
+    echo "--- Processing MASS-${SS} (unlabeled + WPT features) ---"
     python -m sleepvlm.data.preprocess \
-        --input_dir "${DATA_DIR}/MASS/${SS}" \
+        --input_dir "${DATA_DIR}/MASS/${SS}/edfs" \
         --output_dir "${DATA_DIR}/MASS/${SS}/images" \
         --mode unlabeled \
         --wpt_features_dir "${DATA_DIR}/MASS/${SS}/wpt_features" \
