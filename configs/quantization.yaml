@@ -14,5 +14,5 @@ bits: 4
 group_size: 128
 num_samples: 5000    # Stratified by sleep stage
 iters: 200
-seqlen: 2048
+seqlen: 3140
 seed: 42

@@ -46,21 +46,8 @@ for SS in SS2 SS4 SS5; do
         --input_dir "${DATA_DIR}/MASS/${SS}" \
         --output_dir "${DATA_DIR}/MASS/${SS}/images" \
         --mode unlabeled \
-        --band_power_dir "${DATA_DIR}/MASS/${SS}/band_power" \
+        --wpt_features_dir "${DATA_DIR}/MASS/${SS}/wpt_features" \
         --num_workers "${NUM_WORKERS}"
-done
-
-# --- Also compute band power for SS1 and SS3 (needed for completeness) ---
-for SS in SS1 SS3; do
-    echo ""
-    echo "--- Computing band power for MASS-${SS} ---"
-    python -m sleepvlm.data.preprocess \
-        --input_dir "${DATA_DIR}/MASS/${SS}" \
-        --output_dir "${DATA_DIR}/MASS/${SS}/images" \
-        --mode labeled \
-        --band_power_dir "${DATA_DIR}/MASS/${SS}/band_power" \
-        --num_workers "${NUM_WORKERS}" \
-        --skip_render
 done
 
 echo ""
@@ -75,7 +62,7 @@ done
 echo ""
 echo "Band power JSONs:"
 for SS in SS1 SS2 SS3 SS4 SS5; do
-    COUNT=$(find "${DATA_DIR}/MASS/${SS}/band_power" -name "*.json" 2>/dev/null | wc -l)
+    COUNT=$(find "${DATA_DIR}/MASS/${SS}/wpt_features" -name "*.json" 2>/dev/null | wc -l)
     echo "  MASS-${SS}: ${COUNT} files"
 done
 echo "========================================"

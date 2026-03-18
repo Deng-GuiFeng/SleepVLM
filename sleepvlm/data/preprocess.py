@@ -724,7 +724,7 @@ def main():
     parser.add_argument("--mode", type=str, choices=["labeled", "unlabeled"],
                         required=True,
                         help="'labeled' for SS1/SS3, 'unlabeled' for SS2/4/5")
-    parser.add_argument("--band_power_dir", type=str, default=None,
+    parser.add_argument("--wpt_features_dir", type=str, default=None,
                         help="Output directory for band power JSONs")
     parser.add_argument("--num_workers", type=int, default=32,
                         help="Number of parallel workers (default: 32)")
@@ -732,8 +732,8 @@ def main():
                         help="Skip image rendering, only compute band power")
     args = parser.parse_args()
 
-    if args.skip_render and args.band_power_dir is None:
-        parser.error("--skip_render requires --band_power_dir")
+    if args.skip_render and args.wpt_features_dir is None:
+        parser.error("--skip_render requires --wpt_features_dir")
 
     if args.skip_render:
         # Band-power-only mode: reuse run_preprocessing with a flag
@@ -743,7 +743,7 @@ def main():
             input_dir=args.input_dir,
             output_dir=args.output_dir,
             mode=args.mode,
-            band_power_dir=args.band_power_dir,
+            band_power_dir=args.wpt_features_dir,
             num_workers=args.num_workers,
         )
     else:
@@ -751,7 +751,7 @@ def main():
             input_dir=args.input_dir,
             output_dir=args.output_dir,
             mode=args.mode,
-            band_power_dir=args.band_power_dir,
+            band_power_dir=args.wpt_features_dir,
             num_workers=args.num_workers,
         )
 

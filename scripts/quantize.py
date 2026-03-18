@@ -75,7 +75,7 @@ def parse_args() -> argparse.Namespace:
                         help="Number of calibration samples (default: 5000).")
     parser.add_argument("--iters", type=int, default=200,
                         help="AutoRound optimization iterations (default: 200).")
-    parser.add_argument("--seqlen", type=int, default=2048,
+    parser.add_argument("--seqlen", type=int, default=3140,
                         help="Maximum sequence length for calibration (default: 2048).")
     parser.add_argument("--seed", type=int, default=42,
                         help="Random seed for reproducibility (default: 42).")
@@ -305,7 +305,7 @@ def quantize_model(
     group_size: int = 128,
     num_samples: int = 5000,
     iters: int = 200,
-    seqlen: int = 2048,
+    seqlen: int = 3140,
     seed: int = 42,
 ) -> bool:
     """Run the full quantization pipeline and return True on success."""

@@ -5,7 +5,7 @@ into JSONL training data for Phase 1 Waveform-Perceptual Pre-training.
 
 Input layout:
     data/MASS/SS{2,4,5}/images/{subject_id}/{epoch}.png
-    data/MASS/SS{2,4,5}/band_power/{subject_id}.json
+    data/MASS/SS{2,4,5}/wpt_features/{subject_id}.json
 
 Output:
     data/phase1_wpt/train.jsonl
@@ -28,7 +28,7 @@ from tqdm import tqdm
 
 
 # ---------------------------------------------------------------------------
-# Channel name mapping: band_power JSON key -> display label in output
+# Channel name mapping: wpt_features JSON key -> display label in output
 # Note: hyphens below are U+2011 NON-BREAKING HYPHEN, not regular ASCII '-'.
 # ---------------------------------------------------------------------------
 CHANNEL_MAP = {
@@ -154,13 +154,13 @@ def collect_subjects(data_dir: str, subset: str):
     power JSON file exist.
     """
     img_root = os.path.join(data_dir, "MASS", subset, "images")
-    bp_root = os.path.join(data_dir, "MASS", subset, "band_power")
+    bp_root = os.path.join(data_dir, "MASS", subset, "wpt_features")
 
     if not os.path.isdir(img_root):
         print(f"Warning: image directory does not exist: {img_root}")
         return
     if not os.path.isdir(bp_root):
-        print(f"Warning: band_power directory does not exist: {bp_root}")
+        print(f"Warning: wpt_features directory does not exist: {bp_root}")
         return
 
     for sub_id in sorted(os.listdir(img_root)):
@@ -169,7 +169,7 @@ def collect_subjects(data_dir: str, subset: str):
             continue
         bp_file = os.path.join(bp_root, f"{sub_id}.json")
         if not os.path.isfile(bp_file):
-            print(f"Warning: band_power file missing: {bp_file}")
+            print(f"Warning: wpt_features file missing: {bp_file}")
             continue
         unique_id = f"{subset}_{sub_id}"
         yield unique_id, sub_id, sub_img_dir, bp_file

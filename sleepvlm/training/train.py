@@ -486,7 +486,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--log_every", type=int, default=10, help="Log metrics every N micro-steps")
 
     # Image processing
-    parser.add_argument("--min_pixels", type=int, default=256 * 28 * 28, help="Min pixels for image resizing (default 200704)")
+    parser.add_argument("--min_pixels", type=int, default=4 * 28 * 28, help="Min pixels for image resizing (default 3136)")
     parser.add_argument("--max_pixels", type=int, default=1280 * 28 * 28, help="Max pixels for image resizing (default 1003520)")
 
     # TensorBoard

@@ -30,5 +30,5 @@ lora_dropout: 0.05
 freeze_vision_encoder: false  # Vision encoder is UNFROZEN in Phase 1
 
 # Visual token control
-min_pixels: 200704   # 256 * 28 * 28
+min_pixels: 3136     # 4 * 28 * 28 (ensures 448x224 images are not upscaled)
 max_pixels: 1003520  # 1280 * 28 * 28
