@@ -1,0 +1,20 @@
+# SleepVLM Inference Environment
+# Install: pip install -r requirements/inference.txt
+#
+# Note: vLLM may require a different PyTorch version than training.
+# It is recommended to use a separate conda environment for inference.
+
+vllm>=0.6.0
+transformers>=4.45.0
+
+# Qwen2.5-VL dependencies
+qwen-vl-utils>=0.0.8
+
+# Evaluation
+numpy
+pandas
+scikit-learn
+tqdm
+requests
+multiprocess
+openpyxl

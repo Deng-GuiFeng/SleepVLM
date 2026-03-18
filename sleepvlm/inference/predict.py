@@ -1,0 +1,486 @@
+"""
+Inference pipeline for the SleepVLM model.
+
+Handles image encoding, vLLM API calls, sample collection from image
+directories, and parallelised batch inference across multiple API
+endpoints.
+
+The expected directory layout for each subject is::
+
+    <img_dir>/<center>/<subject_id>/
+        0_W.png
+        1_N1.png
+        2_N2.png
+        ...
+
+Each filename follows the pattern ``<epoch_index>_<stage>.<ext>``.
+"""
+
+from __future__ import annotations
+
+import base64
+import json
+import mimetypes
+import os
+import re
+from typing import Any, Dict, List, Optional
+
+import numpy as np
+import requests
+from tqdm import tqdm
+
+from sleepvlm.evaluation.metrics import compute_rules_iou
+from sleepvlm.evaluation.parse_output import STAGE_MAP, parse_model_output
+
+# Re-export the stage map for convenience.
+__all__ = [
+    "to_base64_data_url",
+    "call_vllm_api",
+    "process_sample",
+    "collect_samples",
+    "run_inference",
+]
+
+# ---------------------------------------------------------------------------
+# Filename helpers
+# ---------------------------------------------------------------------------
+
+_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp"}
+
+
+def _is_image_file(path: str) -> bool:
+    """Return True if *path* has a recognised image extension."""
+    ext = os.path.splitext(path)[1].lower()
+    return ext in _IMAGE_EXTENSIONS
+
+
+def _parse_filename(fname: str):
+    """Extract (epoch_index, stage) from a filename like ``42_N2.png``.
+
+    Returns ``None`` when the filename does not match the expected pattern.
+    """
+    match = re.match(r"^(\d+)_([^.]+)\.[A-Za-z0-9]+$", fname)
+    if not match:
+        return None
+    try:
+        idx = int(match.group(1))
+    except ValueError:
+        return None
+    stage = match.group(2)
+    return idx, stage
+
+
+# ---------------------------------------------------------------------------
+# Image encoding
+# ---------------------------------------------------------------------------
+
+def to_base64_data_url(path: str) -> str:
+    """Convert an image file to a base64-encoded data URL.
+
+    The MIME type is inferred from the file extension.  Falls back to
+    ``image/png`` when the type cannot be determined.
+
+    Parameters
+    ----------
+    path : str
+        Path to the image file on disk.
+
+    Returns
+    -------
+    str
+        A ``data:<mime>;base64,<payload>`` URL suitable for embedding in
+        OpenAI-compatible chat messages.
+    """
+    mime, _ = mimetypes.guess_type(path)
+    mime = mime or "image/png"
+    with open(path, "rb") as fh:
+        b64 = base64.b64encode(fh.read()).decode("utf-8")
+    return f"data:{mime};base64,{b64}"
+
+
+# ---------------------------------------------------------------------------
+# vLLM API interaction
+# ---------------------------------------------------------------------------
+
+def call_vllm_api(
+    messages: List[Dict[str, Any]],
+    base_url: str,
+    model_name: str,
+    temperature: float,
+    top_p: float,
+    max_tokens: int,
+    seed: Optional[int] = None,
+) -> str:
+    """Send a chat-completion request to a local vLLM server.
+
+    Parameters
+    ----------
+    messages : list of dict
+        OpenAI-compatible message list (system + user).
+    base_url : str
+        Base URL of the vLLM server, e.g. ``"http://127.0.0.1:6002/v1"``.
+    model_name : str
+        Model identifier (typically the checkpoint directory path).
+    temperature : float
+        Sampling temperature.
+    top_p : float
+        Nucleus-sampling cumulative probability threshold.
+    max_tokens : int
+        Maximum number of tokens to generate.
+    seed : int, optional
+        Random seed for reproducibility.  When ``None`` the server's default
+        randomness is used.
+
+    Returns
+    -------
+    str
+        The text content of the first completion choice.
+    """
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer EMPTY",
+    }
+
+    payload: Dict[str, Any] = {
+        "model": model_name,
+        "messages": messages,
+        "temperature": temperature,
+        "top_p": top_p,
+        "max_tokens": max_tokens,
+    }
+    if seed is not None:
+        payload["seed"] = seed
+
+    resp = requests.post(
+        f"{base_url}/chat/completions",
+        headers=headers,
+        data=json.dumps(payload),
+    )
+    resp.raise_for_status()
+    data = resp.json()
+
+    try:
+        content = data["choices"][0]["message"]["content"]
+    except (KeyError, IndexError, TypeError):
+        content = str(data)
+    return content
+
+
+# ---------------------------------------------------------------------------
+# Single-sample processing
+# ---------------------------------------------------------------------------
+
+def process_sample(
+    sample: Dict[str, Any],
+    base_url: str,
+    system_prompt: str,
+    model_name: str,
+    temperature: float,
+    top_p: float,
+    max_tokens: int,
+    seed: Optional[int],
+) -> Dict[str, Any]:
+    """Process a single sample: build messages, call API, parse, compute IoU.
+
+    The message payload contains three images arranged as a sliding window:
+
+    * **Preceding epoch N-1** (context)
+    * **Target epoch N** (the epoch to classify)
+    * **Subsequent epoch N+1** (context)
+
+    Parameters
+    ----------
+    sample : dict
+        Must contain ``custom_id``, ``sub_id``, ``image_paths`` (with keys
+        ``preceding``, ``current``, ``subsequent``), ``stage``, ``label``,
+        and optionally ``gt_applicable_rules``.
+    base_url : str
+        vLLM server URL.
+    system_prompt : str
+        System-level prompt text.
+    model_name : str
+        Model identifier for the API.
+    temperature, top_p, max_tokens, seed :
+        Generation hyper-parameters forwarded to :func:`call_vllm_api`.
+
+    Returns
+    -------
+    dict
+        Result dictionary with keys: ``custom_id``, ``sub_id``,
+        ``image_paths``, ``stage``, ``label``, ``output``, ``pred``,
+        ``pred_stage``, ``reasoning_text``, ``applicable_rules``,
+        ``gt_applicable_rules``, ``rules_iou``, ``parse_error``.
+    """
+    # NOTE: The non-breaking hyphen U+2011 is used in "N-1" to match the
+    # training data formatting exactly.
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Preceding epoch N\u20111: "},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": to_base64_data_url(
+                            sample["image_paths"]["preceding"]
+                        ),
+                    },
+                },
+                {"type": "text", "text": "**Target epoch N**: "},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": to_base64_data_url(
+                            sample["image_paths"]["current"]
+                        ),
+                    },
+                },
+                {"type": "text", "text": "Subsequent epoch N+1: "},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": to_base64_data_url(
+                            sample["image_paths"]["subsequent"]
+                        ),
+                    },
+                },
+            ],
+        },
+    ]
+
+    gt_applicable_rules = sample.get("gt_applicable_rules")
+
+    try:
+        out_text = call_vllm_api(
+            messages, base_url, model_name, temperature, top_p, max_tokens, seed
+        )
+        sleep_stage, reasoning_text, applicable_rules, parse_error = (
+            parse_model_output(out_text)
+        )
+        pred = STAGE_MAP.get(sleep_stage, -1) if sleep_stage is not None else -1
+        rules_iou = compute_rules_iou(applicable_rules, gt_applicable_rules)
+
+        return {
+            "custom_id": sample["custom_id"],
+            "sub_id": sample["sub_id"],
+            "image_paths": sample["image_paths"],
+            "stage": sample["stage"],
+            "label": sample["label"],
+            "output": out_text,
+            "pred": pred,
+            "pred_stage": sleep_stage,
+            "reasoning_text": reasoning_text,
+            "applicable_rules": applicable_rules,
+            "gt_applicable_rules": gt_applicable_rules,
+            "rules_iou": rules_iou,
+            "parse_error": parse_error,
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "custom_id": sample["custom_id"],
+            "sub_id": sample["sub_id"],
+            "image_paths": sample["image_paths"],
+            "stage": sample["stage"],
+            "label": sample["label"],
+            "output": f"Request failed: {exc}",
+            "pred": -1,
+            "pred_stage": None,
+            "reasoning_text": None,
+            "applicable_rules": None,
+            "gt_applicable_rules": gt_applicable_rules,
+            "rules_iou": float("nan"),
+            "parse_error": f"Request exception: {exc}",
+        }
+
+
+def _process_sample_star(args):
+    """Unpack a positional-argument tuple and forward to :func:`process_sample`.
+
+    This wrapper is required because :mod:`multiprocess` ``Pool.imap*``
+    only passes a single argument to the worker function.
+    """
+    return process_sample(*args)
+
+
+# ---------------------------------------------------------------------------
+# Sample collection
+# ---------------------------------------------------------------------------
+
+def collect_samples(
+    subjects: List[str],
+    img_dir: str,
+    annotation_data: Optional[Dict[str, Any]] = None,
+) -> List[Dict[str, Any]]:
+    """Collect all test samples from subject image directories.
+
+    For each subject the function reads the image directory, sorts epochs by
+    index, and builds a sliding window of three consecutive epochs (preceding,
+    current, subsequent).  The first and last epochs of each subject are used
+    only as context and are never the classification target.
+
+    Parameters
+    ----------
+    subjects : list of str
+        Subject identifiers in the form ``"<center>/<subject_id>"``
+        (e.g. ``"MASS-SS1/01-01-0001"``).
+    img_dir : str
+        Root directory containing subject image sub-directories.
+    annotation_data : dict, optional
+        Mapping from annotation key to a dict with ``"applicable_rules"``
+        (list of str) and ``"stage"`` (str).  When provided, the ground-truth
+        rules are attached to each sample.
+
+    Returns
+    -------
+    list of dict
+        Each element is a sample dict ready for :func:`process_sample`.
+    """
+    if annotation_data is None:
+        annotation_data = {}
+
+    samples: List[Dict[str, Any]] = []
+
+    for sub_id in tqdm(subjects, desc="Collecting samples"):
+        sub_img_dir = os.path.join(img_dir, sub_id)
+        if not os.path.isdir(sub_img_dir):
+            continue
+
+        # Discover image files and parse their filenames.
+        epochs = []
+        for fname in os.listdir(sub_img_dir):
+            if not _is_image_file(fname):
+                continue
+            parsed = _parse_filename(fname)
+            if parsed is None:
+                continue
+            idx, stage = parsed
+            epochs.append(
+                {
+                    "idx": idx,
+                    "stage": stage,
+                    "path": os.path.join(sub_img_dir, fname),
+                    "sub_id": sub_id,
+                }
+            )
+
+        if len(epochs) < 3:
+            continue
+
+        epochs.sort(key=lambda e: e["idx"])
+
+        # Build 3-epoch sliding windows; only interior epochs are targets.
+        n = len(epochs)
+        for pos in range(1, n - 1):
+            preceding = epochs[pos - 1]
+            current = epochs[pos]
+            subsequent = epochs[pos + 1]
+
+            current_stage = current["stage"]
+            custom_id = f"{sub_id}#{current['idx']}_{current_stage}"
+
+            # Look up ground-truth annotation (key uses bare subject id).
+            subject_id_only = sub_id.split("/")[-1]
+            annotation_key = (
+                f"{subject_id_only}#{current['idx']}_{current_stage}"
+            )
+            annotation_item = annotation_data.get(annotation_key)
+            gt_applicable_rules = (
+                annotation_item["applicable_rules"]
+                if annotation_item
+                else None
+            )
+
+            samples.append(
+                {
+                    "custom_id": custom_id,
+                    "sub_id": sub_id,
+                    "image_paths": {
+                        "preceding": preceding["path"],
+                        "current": current["path"],
+                        "subsequent": subsequent["path"],
+                    },
+                    "stage": current_stage,
+                    "label": STAGE_MAP.get(current_stage, -1),
+                    "gt_applicable_rules": gt_applicable_rules,
+                }
+            )
+
+    return samples
+
+
+# ---------------------------------------------------------------------------
+# Parallel inference
+# ---------------------------------------------------------------------------
+
+def run_inference(
+    samples: List[Dict[str, Any]],
+    api_urls: List[str],
+    system_prompt: str,
+    model_name: str,
+    temperature: float,
+    top_p: float,
+    max_tokens: int,
+    seed: Optional[int],
+    num_threads: int,
+) -> List[Dict[str, Any]]:
+    """Run parallel inference over all samples using a multiprocess pool.
+
+    Samples are distributed across *api_urls* in round-robin fashion so that
+    the load is balanced across multiple vLLM server instances.
+
+    Parameters
+    ----------
+    samples : list of dict
+        Sample dicts as produced by :func:`collect_samples`.
+    api_urls : list of str
+        vLLM server base URLs (e.g. ``["http://127.0.0.1:6002/v1", ...]``).
+    system_prompt : str
+        System prompt text.
+    model_name : str
+        Model identifier.
+    temperature, top_p, max_tokens, seed :
+        Generation hyper-parameters.
+    num_threads : int
+        Number of parallel worker processes.
+
+    Returns
+    -------
+    list of dict
+        Result dicts sorted in the same order as the input *samples*.
+    """
+    # Import here to keep the top-level import lightweight; multiprocess can
+    # be slow to load on some systems.
+    import multiprocess as mp  # noqa: WPS433
+
+    # Build task tuples with round-robin URL assignment.
+    tasks = [
+        (
+            sample,
+            api_urls[idx % len(api_urls)],
+            system_prompt,
+            model_name,
+            temperature,
+            top_p,
+            max_tokens,
+            seed,
+        )
+        for idx, sample in enumerate(samples)
+    ]
+
+    # Build a lookup from custom_id to original position for sorting.
+    order_map = {s["custom_id"]: i for i, s in enumerate(samples)}
+
+    results: List[Dict[str, Any]] = []
+    with mp.Pool(processes=num_threads) as pool:
+        for result in tqdm(
+            pool.imap_unordered(_process_sample_star, tasks),
+            total=len(tasks),
+            desc="Inference",
+        ):
+            results.append(result)
+
+    # Restore the original sample order for deterministic output.
+    results.sort(key=lambda r: order_map.get(r["custom_id"], float("inf")))
+
+    return results

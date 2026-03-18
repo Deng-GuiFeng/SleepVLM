@@ -1,0 +1,35 @@
+# Phase 2: Rule-Grounded Supervised Fine-tuning (SFT)
+# Fine-tune the model to perform sleep staging with rule-grounded reasoning.
+# Input: 3-epoch window (preceding, current, subsequent).
+# Output: sleep stage + AASM rule identifiers + reasoning text.
+#
+# Data: MASS-SS3 via MASS-EX (5 fine + 45 coarse subjects)
+# Vision encoder: FROZEN
+
+model_path: models/Qwen2.5-VL-3B-Instruct  # Or Phase 1 merged checkpoint
+train_file: data/phase2_sft/train.jsonl
+image_root: data
+output_dir: outputs/phase2_sft
+
+# Training hyperparameters
+epochs: 15
+per_device_train_batch_size: 6
+gradient_accumulation_steps: 1
+learning_rate: 1.0e-4
+weight_decay: 0.1
+warmup_ratio: 0.03
+max_grad_norm: 1.0
+seed: 42
+
+# Checkpointing
+save_steps: 1000
+
+# LoRA configuration
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.05
+freeze_vision_encoder: true  # Vision encoder is FROZEN in Phase 2
+
+# Visual token control
+min_pixels: 200704   # 256 * 28 * 28
+max_pixels: 1003520  # 1280 * 28 * 28

@@ -1,0 +1,34 @@
+# Phase 1: Waveform-Perceptual Pre-training (WPT)
+# Train the model to perceive PSG waveform morphology by predicting
+# per-second spectral and amplitude features from single epoch images.
+#
+# Data: MASS-SS2/4/5 (85 subjects)
+# Vision encoder: UNFROZEN
+
+model_path: models/Qwen2.5-VL-3B-Instruct
+train_file: data/phase1_wpt/train.jsonl
+image_root: data
+output_dir: outputs/phase1_wpt
+
+# Training hyperparameters
+epochs: 2
+per_device_train_batch_size: 4
+gradient_accumulation_steps: 1
+learning_rate: 1.0e-4
+weight_decay: 0.1
+warmup_ratio: 0.03
+max_grad_norm: 1.0
+seed: 42
+
+# Checkpointing
+save_steps: 1000
+
+# LoRA configuration
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.05
+freeze_vision_encoder: false  # Vision encoder is UNFROZEN in Phase 1
+
+# Visual token control
+min_pixels: 200704   # 256 * 28 * 28
+max_pixels: 1003520  # 1280 * 28 * 28

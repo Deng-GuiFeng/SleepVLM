@@ -1,0 +1,53 @@
+# Data (user downloads/generates locally)
+/data/
+/models/
+/outputs/
+
+# Old source code (temporary reference, not part of release)
+old_source_code/
+tmp/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Environments
+.env
+.venv
+venv/
+ENV/
+
+# Claude Code
+CLAUDE.md
+.claude/
+
+# IDEs
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Training artifacts
+*.log
+tensorboard/
+
+# Large files
+*.edf
+*.h5
+*.hdf5

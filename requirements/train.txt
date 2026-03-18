@@ -1,0 +1,25 @@
+# SleepVLM Training Environment
+# Install: pip install -r requirements/train.txt
+
+torch>=2.4.0
+torchvision>=0.19.0
+transformers>=4.45.0
+accelerate>=0.34.0
+peft>=0.12.0
+
+# Qwen2.5-VL dependencies
+qwen-vl-utils>=0.0.8
+
+# Data processing
+numpy
+scipy
+mne>=1.6.0
+matplotlib
+pandas
+tqdm
+
+# Evaluation
+scikit-learn
+
+# Logging
+tensorboard

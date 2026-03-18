@@ -1,0 +1,11 @@
+# SleepVLM Quantization Environment
+# Install: pip install -r requirements/quantize.txt
+#
+# Note: AutoRound may require specific PyTorch/transformers versions.
+# It is recommended to use a separate conda environment.
+
+torch>=2.4.0
+transformers>=4.45.0
+auto-round>=0.4.0
+qwen-vl-utils>=0.0.8
+accelerate>=0.34.0

@@ -1,0 +1,24 @@
+# Inference configuration for SleepVLM evaluation
+#
+# Uses vLLM for efficient batch inference.
+# Near-deterministic decoding for reproducible results.
+
+model_path: outputs/phase2_sft/lora_merge/best
+system_prompt: sleepvlm/prompts/phase2_sft_fine.md
+
+# Decoding parameters
+temperature: 1.0e-6   # Near-deterministic
+top_p: 0.8
+max_tokens: 1024
+
+# vLLM server configuration
+tensor_parallel_size: 1
+max_model_len: 5000
+gpu_memory_utilization: 0.9
+
+# Multi-modal processor
+min_pixels: 3136     # Minimum for vLLM
+max_pixels: 1003520
+
+# Parallelism
+num_threads: 64

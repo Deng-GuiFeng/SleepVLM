@@ -1,0 +1,41 @@
+cff-version: 1.2.0
+title: "SleepVLM: Explainable and Rule-Grounded Sleep Staging via a Vision-Language Model"
+message: "If you use this software, please cite the paper below."
+type: software
+authors:
+  - family-names: Deng
+    given-names: Guifeng
+    orcid: "https://orcid.org/0009-0001-1940-7797"
+    affiliation: Zhejiang University
+  - family-names: Wang
+    given-names: Pan
+    orcid: "https://orcid.org/0009-0001-6664-6934"
+    affiliation: Wenzhou Medical University
+  - family-names: Wang
+    given-names: Jiquan
+    affiliation: Zhejiang University
+  - family-names: Li
+    given-names: Tao
+    orcid: "https://orcid.org/0000-0003-3831-901X"
+    affiliation: Zhejiang University
+  - family-names: Jiang
+    given-names: Haiteng
+    orcid: "https://orcid.org/0000-0003-0739-8413"
+    affiliation: Zhejiang University
+repository-code: "https://github.com/Deng-GuiFeng/SleepVLM"
+license: Apache-2.0
+preferred-citation:
+  type: article
+  title: "SleepVLM: Explainable and Rule-Grounded Sleep Staging via a Vision-Language Model"
+  authors:
+    - family-names: Deng
+      given-names: Guifeng
+    - family-names: Wang
+      given-names: Pan
+    - family-names: Wang
+      given-names: Jiquan
+    - family-names: Li
+      given-names: Tao
+    - family-names: Jiang
+      given-names: Haiteng
+  year: 2026
