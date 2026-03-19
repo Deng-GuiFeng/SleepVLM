@@ -179,8 +179,12 @@ def process_sample(
     top_p: float,
     max_tokens: int,
     seed: Optional[int],
+    all_api_urls: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """Process a single sample: build messages, call API, parse, compute IoU.
+
+    If the primary ``base_url`` returns a server error (5xx), the request is
+    automatically retried on other URLs from ``all_api_urls``.
 
     The message payload contains three images arranged as a sliding window:
 
@@ -251,10 +255,30 @@ def process_sample(
 
     gt_applicable_rules = sample.get("gt_applicable_rules")
 
+    # Build the list of URLs to try: primary first, then fallbacks.
+    urls_to_try = [base_url]
+    if all_api_urls:
+        for u in all_api_urls:
+            if u != base_url and u not in urls_to_try:
+                urls_to_try.append(u)
+
     try:
-        out_text = call_vllm_api(
-            messages, base_url, model_name, temperature, top_p, max_tokens, seed
-        )
+        out_text = None
+        last_err = None
+        for try_url in urls_to_try:
+            try:
+                out_text = call_vllm_api(
+                    messages, try_url, model_name, temperature, top_p,
+                    max_tokens, seed,
+                )
+                break  # Success
+            except requests.exceptions.HTTPError as e:
+                if e.response is not None and e.response.status_code >= 500:
+                    last_err = e
+                    continue  # Retry on next server
+                raise  # Client error (4xx), don't retry
+        if out_text is None:
+            raise last_err or RuntimeError("All API endpoints failed")
         sleep_stage, reasoning_text, applicable_rules, parse_error = (
             parse_model_output(out_text)
         )

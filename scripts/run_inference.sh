@@ -75,7 +75,7 @@ wait_for_ready() {
     local timeout="${SERVER_READY_TIMEOUT:-300}"
     local waited=0
     echo "  Waiting for server on port ${port} (timeout: ${timeout}s)..."
-    until curl -s "http://127.0.0.1:${port}/health" >/dev/null 2>&1; do
+    until curl --noproxy '*' -s "http://127.0.0.1:${port}/health" >/dev/null 2>&1; do
         sleep 5
         waited=$((waited + 5))
         if (( waited % 30 == 0 )); then
@@ -111,8 +111,13 @@ fi
 successful_servers=0
 for gpu_id in $(seq 0 $((GPU_COUNT - 1))); do
     PORT=$((BASE_PORT + successful_servers))
+
     echo "[TRY] GPU ${gpu_id} -> port ${PORT}"
-    CUDA_VISIBLE_DEVICES=$gpu_id python -m vllm.entrypoints.openai.api_server \
+    export CUDA_VISIBLE_DEVICES=$gpu_id
+
+    LOG_FILE="$LOG_DIR/gpu${gpu_id}_port${PORT}.log"
+
+    python -m vllm.entrypoints.openai.api_server \
         --model "$MODEL_PATH" \
         --host 127.0.0.1 \
         --port "$PORT" \
@@ -123,7 +128,7 @@ for gpu_id in $(seq 0 $((GPU_COUNT - 1))); do
         --trust-remote-code \
         ${QUANT_ARGS} \
         --mm-processor-kwargs '{"min_pixels":3136,"max_pixels":1003520}' \
-        > "$LOG_DIR/gpu${gpu_id}_port${PORT}.log" 2>&1 &
+        > "$LOG_FILE" 2>&1 &
     pid=$!
 
     if wait_for_ready "$PORT"; then
