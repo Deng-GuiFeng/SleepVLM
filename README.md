@@ -11,7 +11,7 @@
 <p align="center">
   <a href="#">Paper</a> &nbsp;|&nbsp;
   <a href="https://github.com/Deng-GuiFeng/MASS-EX">MASS-EX Dataset</a> &nbsp;|&nbsp;
-  <a href="https://huggingface.co/Feng613/SleepVLM-3B">Model Weights</a>
+  <a href="https://huggingface.co/collections/Feng613/sleepvlm">Model Weights</a>
 </p>
 
 ---
@@ -32,7 +32,7 @@
 
 There are two paths depending on your goal:
 
-**Path A -- Inference only.** Download the pre-trained weights from HuggingFace (see [Pre-trained Models](#pre-trained-models)) and skip directly to the [Inference](#7-inference) section. You still need to preprocess your PSG data into waveform images (steps 1--3 of Data Preparation).
+**Path A -- Inference only.** Download the pre-trained weights from HuggingFace (see [Pre-trained Models](#pre-trained-models)) and skip directly to the [Inference](#inference) section. You still need to preprocess your PSG data into waveform images (steps 1--3 of Data Preparation).
 
 **Path B -- Full reproduction.** Follow every section below in order, from Installation through Evaluation.
 
@@ -156,7 +156,7 @@ python scripts/merge_lora.py \
 
 ---
 
-## 7. Inference
+## Inference
 
 Inference uses vLLM to serve the model. If you installed training and inference dependencies in separate environments, switch to the inference environment first:
 
