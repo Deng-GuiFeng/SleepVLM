@@ -298,12 +298,12 @@ This project uses the following MASS subsets. Apply for access at the [MASS repo
 
 ### MASS-EX (Expert Annotations)
 
-[MASS-EX](MASS-EX/) provides expert-annotated data for all 62 MASS-SS3 subjects, containing:
+[MASS-EX](https://github.com/Deng-GuiFeng/MASS-EX) provides expert-annotated data for all 62 MASS-SS3 subjects, containing:
 
 - **Fine annotations** (5 subjects, 5,006 epochs): sleep stage + AASM rule identifiers + expert-written rationale
 - **Coarse annotations** (57 subjects, 54,187 epochs): sleep stage + AASM rule identifiers
 
-MASS-EX is included in this repository as a git submodule. If you cloned with `--recurse-submodules`, the annotations are already present in `MASS-EX/`. See [MASS-EX/README.md](MASS-EX/README.md) for details on the annotation pipeline and format.
+MASS-EX is included in this repository as a git submodule. If you cloned with `--recurse-submodules`, the annotations are already present in `MASS-EX/`. See the [MASS-EX README](https://github.com/Deng-GuiFeng/MASS-EX#readme) for details on the annotation pipeline and format.
 
 ---
 
