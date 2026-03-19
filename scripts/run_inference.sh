@@ -93,6 +93,21 @@ LOG_DIR="/tmp/vllm_sleepvlm_logs_$$"
 mkdir -p "$LOG_DIR"
 echo "Server logs: $LOG_DIR"
 
+# Auto-detect quantized models (look for quantization_config in config.json)
+QUANT_ARGS=""
+if [ -f "${MODEL_PATH}/config.json" ]; then
+    QUANT_METHOD=$(python3 -c "
+import json
+with open('${MODEL_PATH}/config.json') as f:
+    cfg = json.load(f)
+print(cfg.get('quantization_config', {}).get('quant_method', ''))
+" 2>/dev/null)
+    if [ -n "$QUANT_METHOD" ]; then
+        QUANT_ARGS="--quantization $QUANT_METHOD --dtype float16"
+        echo "Quantized model detected: $QUANT_METHOD"
+    fi
+fi
+
 successful_servers=0
 for gpu_id in $(seq 0 $((GPU_COUNT - 1))); do
     PORT=$((BASE_PORT + successful_servers))
@@ -106,6 +121,7 @@ for gpu_id in $(seq 0 $((GPU_COUNT - 1))); do
         --max-model-len "$MAX_MODEL_LEN" \
         --gpu-memory-utilization 0.9 \
         --trust-remote-code \
+        ${QUANT_ARGS} \
         --mm-processor-kwargs '{"min_pixels":3136,"max_pixels":1003520}' \
         > "$LOG_DIR/gpu${gpu_id}_port${PORT}.log" 2>&1 &
     pid=$!

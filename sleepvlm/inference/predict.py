@@ -484,3 +484,169 @@ def run_inference(
     results.sort(key=lambda r: order_map.get(r["custom_id"], float("inf")))
 
     return results
+
+
+# ---------------------------------------------------------------------------
+# CLI entry point
+# ---------------------------------------------------------------------------
+
+def _load_annotations_from_massex(annotation_dir: str) -> Dict[str, Any]:
+    """Load ground-truth annotations from MASS-EX CSV files.
+
+    Returns a dict keyed by ``"<subject_id>#<epoch>_<stage>"`` with value
+    ``{"applicable_rules": [...]}``.
+    """
+    import csv
+
+    data: Dict[str, Any] = {}
+    for subdir in ("fine", "coarse"):
+        csv_dir = os.path.join(annotation_dir, subdir)
+        if not os.path.isdir(csv_dir):
+            continue
+        for fname in os.listdir(csv_dir):
+            if not fname.endswith(".csv"):
+                continue
+            fpath = os.path.join(csv_dir, fname)
+            with open(fpath, newline="", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    cid = row.get("custom_id", "")
+                    rules_str = row.get("applicable_rules", "")
+                    if not cid:
+                        continue
+                    rules = (
+                        [r.strip() for r in rules_str.split(",") if r.strip()]
+                        if rules_str
+                        else []
+                    )
+                    data[cid] = {"applicable_rules": rules}
+    return data
+
+
+def main() -> None:
+    """CLI entry point for batch inference."""
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Run SleepVLM inference on a test set via vLLM."
+    )
+    parser.add_argument("--model_name", type=str, required=True,
+                        help="Model name/path (must match vLLM --served-model-name)")
+    parser.add_argument("--system_prompt", type=str, required=True,
+                        help="Path to the system prompt file")
+    parser.add_argument("--split_json", type=str, default="split.json",
+                        help="Path to split.json")
+    parser.add_argument("--split", type=str, default="test",
+                        choices=["test", "val"],
+                        help="Which split to evaluate (default: test)")
+    parser.add_argument("--img_dir", type=str, default="data/MASS",
+                        help="Root data directory containing SS*/images/")
+    parser.add_argument("--annotation_dir", type=str, default="MASS-EX/annotations",
+                        help="Path to MASS-EX annotations directory")
+    parser.add_argument("--output_dir", type=str, default="outputs/eval",
+                        help="Output directory for results")
+    parser.add_argument("--base_port", type=int, default=6002)
+    parser.add_argument("--num_gpus", type=int, default=1)
+    parser.add_argument("--num_threads", type=int, default=64)
+    parser.add_argument("--temperature", type=float, default=1e-6)
+    parser.add_argument("--top_p", type=float, default=0.8)
+    parser.add_argument("--max_tokens", type=int, default=1024)
+    parser.add_argument("--seed", type=int, default=None)
+    args = parser.parse_args()
+
+    # Load split configuration.
+    with open(args.split_json, "r", encoding="utf-8") as f:
+        split_config = json.load(f)
+
+    if args.split == "test":
+        raw_subjects = split_config["test_subjects"]
+    else:
+        raw_subjects = split_config["val_subjects"]
+
+    # Map subject IDs to their image directory paths.
+    # Test subjects (01-01-*) are in SS1/images/, val subjects (01-03-*)
+    # are in SS3/images/, etc.
+    SUBSET_MAP = {
+        "01-01": "SS1", "01-02": "SS2", "01-03": "SS3",
+        "01-04": "SS4", "01-05": "SS5",
+    }
+
+    # Build subject list with full image directory paths.
+    # collect_samples joins img_dir + sub_id to find images.
+    subjects = []
+    for sid in raw_subjects:
+        prefix = sid[:5]  # e.g. "01-01"
+        subset = SUBSET_MAP.get(prefix)
+        if subset:
+            # Path under img_dir: SS1/images/01-01-0001
+            subjects.append(os.path.join(subset, "images", sid))
+        else:
+            subjects.append(sid)
+
+    print(f"Split: {args.split} ({len(subjects)} subjects)")
+
+    # Load system prompt.
+    with open(args.system_prompt, "r", encoding="utf-8") as f:
+        system_prompt = f.read()
+
+    # Load ground-truth annotations (for IoU computation).
+    annotation_data = {}
+    if os.path.isdir(args.annotation_dir):
+        annotation_data = _load_annotations_from_massex(args.annotation_dir)
+        print(f"Loaded {len(annotation_data)} ground-truth annotations")
+
+    # Collect samples.
+    samples = collect_samples(subjects, args.img_dir, annotation_data)
+
+    # Fix sub_id: strip the internal "SS1/images/" prefix so that
+    # sub_id is a clean identifier like "01-01-0001".
+    for s in samples:
+        parts = s["sub_id"].split("/")
+        s["sub_id"] = parts[-1]  # "01-01-0001"
+        # Also fix custom_id to use clean sub_id
+        s["custom_id"] = f"{s['sub_id']}#{s['custom_id'].split('#', 1)[1]}"
+    print(f"Collected {len(samples)} samples")
+
+    if not samples:
+        print("No samples found. Check --img_dir and subject image directories.")
+        return
+
+    # Build API URLs.
+    api_urls = [
+        f"http://127.0.0.1:{args.base_port + i}/v1"
+        for i in range(args.num_gpus)
+    ]
+
+    # Run inference.
+    results = run_inference(
+        samples=samples,
+        api_urls=api_urls,
+        system_prompt=system_prompt,
+        model_name=args.model_name,
+        temperature=args.temperature,
+        top_p=args.top_p,
+        max_tokens=args.max_tokens,
+        seed=args.seed,
+        num_threads=args.num_threads,
+    )
+
+    # Save results.
+    os.makedirs(args.output_dir, exist_ok=True)
+    output_jsonl = os.path.join(args.output_dir, "results.jsonl")
+    with open(output_jsonl, "w", encoding="utf-8") as f:
+        for item in results:
+            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+    print(f"Results saved to {output_jsonl}")
+
+    # Quick summary.
+    valid = [r for r in results if r.get("pred", -1) in STAGE_MAP.values()]
+    if valid:
+        correct = sum(1 for r in valid if r["pred"] == r["label"])
+        print(f"Valid predictions: {len(valid)}/{len(results)}")
+        print(f"Accuracy: {correct / len(valid):.4f}")
+    else:
+        print("No valid predictions to summarize.")
+
+
+if __name__ == "__main__":
+    main()
