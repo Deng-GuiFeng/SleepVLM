@@ -11,7 +11,7 @@
 <p align="center">
   <a href="#">Paper</a> &nbsp;|&nbsp;
   <a href="https://github.com/Deng-GuiFeng/MASS-EX">MASS-EX Dataset</a> &nbsp;|&nbsp;
-  <a href="https://huggingface.co/collections/Feng613/sleepvlm">Model Weights</a>
+  <a href="https://huggingface.co/Feng613/SleepVLM-3B">Model Weights</a>
 </p>
 
 ---
@@ -180,7 +180,7 @@ MODEL_PATH=outputs/phase2_sft/merged bash scripts/run_inference.sh
 To use the pre-trained HuggingFace weights directly:
 
 ```bash
-MODEL_PATH=Feng613/SleepVLM bash scripts/run_inference.sh
+MODEL_PATH=Feng613/SleepVLM-3B bash scripts/run_inference.sh
 ```
 
 ### Evaluation
@@ -199,8 +199,8 @@ python scripts/evaluate.py \
 
 | Model | Precision | Size | HuggingFace |
 |-------|-----------|------|-------------|
-| SleepVLM | BF16 | ~6 GB | [Feng613/SleepVLM](https://huggingface.co/Feng613/SleepVLM) |
-| SleepVLM-W4A16 | INT4 | ~3 GB | [Feng613/SleepVLM-W4A16](https://huggingface.co/Feng613/SleepVLM-W4A16) |
+| SleepVLM-3B | BF16 | ~6 GB | [Feng613/SleepVLM-3B](https://huggingface.co/Feng613/SleepVLM-3B) |
+| SleepVLM-3B-W4A16 | INT4 | ~3 GB | [Feng613/SleepVLM-3B-W4A16](https://huggingface.co/Feng613/SleepVLM-3B-W4A16) |
 
 ---
 
