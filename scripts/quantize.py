@@ -31,7 +31,6 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List
 
-import torch
 from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
 
 # ---------------------------------------------------------------------------
@@ -329,7 +328,7 @@ def quantize_model(
     logger.info("[Step 1/5] Loading model ...")
     model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
         model_path,
-        torch_dtype=torch.float16,
+        dtype="float16",
         trust_remote_code=True,
         device_map="auto",
     )

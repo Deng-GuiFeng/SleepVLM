@@ -258,7 +258,7 @@ def merge_single(
         print(f"Loading base model from {resolved_base_path} ...")
         base_model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
             resolved_base_path,
-            torch_dtype=torch.bfloat16,
+            dtype="bfloat16",
             device_map="auto",
         )
 
@@ -288,7 +288,7 @@ def merge_single(
 
     base_model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
         resolved_base_path,
-        torch_dtype=torch.bfloat16,
+        dtype="bfloat16",
         device_map="auto",
     )
 
@@ -402,7 +402,7 @@ def main() -> None:
         print(f"\nLoading base model from {base_model_path} ...")
         base_model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
             base_model_path,
-            torch_dtype=torch.bfloat16,
+            dtype="bfloat16",
             device_map="auto",
         )
 

@@ -585,7 +585,7 @@ def main() -> None:
     )
 
     model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-        args.model_path, torch_dtype=torch.bfloat16
+        args.model_path, dtype="bfloat16"
     )
     model.config.use_cache = False
 
