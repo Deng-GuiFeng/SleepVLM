@@ -205,6 +205,18 @@ def main() -> None:
     df = load_results(args.results_jsonl)
     print(f"  Loaded {len(df)} records across {df['sub_id'].nunique()} subjects.")
 
+    # Ensure sub_id has a center prefix (e.g. "MASS-SS1/01-01-0001").
+    # If sub_id is a bare ID like "01-01-0001", infer the center.
+    SUBSET_MAP = {
+        "01-01": "MASS-SS1", "01-02": "MASS-SS2", "01-03": "MASS-SS3",
+        "01-04": "MASS-SS4", "01-05": "MASS-SS5",
+    }
+    if "/" not in str(df["sub_id"].iloc[0]):
+        df["sub_id"] = df["sub_id"].apply(
+            lambda sid: f"{SUBSET_MAP.get(str(sid)[:5], 'unknown')}/{sid}"
+        )
+        print(f"  Inferred center prefix -> {df['sub_id'].iloc[0].split('/')[0]}")
+
     # Recompute rules_iou from raw fields if the column is absent but the
     # source data provides both predicted and ground-truth rules.
     if "rules_iou" not in df.columns:

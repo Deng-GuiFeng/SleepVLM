@@ -162,36 +162,35 @@ Inference uses vLLM to serve the model. If you installed training and inference 
 
 ```bash
 conda activate SleepVLM-infer
-pip install -r requirements/inference.txt
 ```
 
-Run inference on the MASS-SS1 test set (53 subjects). The script automatically launches vLLM servers (one per available GPU), runs parallel inference, and shuts down the servers when finished:
+Run inference on the MASS-SS1 test set (53 subjects). The script automatically launches one vLLM server per available GPU, runs parallel inference, and shuts down the servers when finished:
 
 ```bash
-bash scripts/run_inference.sh
-```
-
-To use a specific model checkpoint, set the `MODEL_PATH` environment variable:
-
-```bash
+# Using a locally trained checkpoint
 MODEL_PATH=outputs/phase2_sft/merged bash scripts/run_inference.sh
+
+# Using pre-trained weights downloaded to models/
+MODEL_PATH=models/SleepVLM-3B bash scripts/run_inference.sh
 ```
 
-To use the pre-trained HuggingFace weights directly:
+Results are saved to `outputs/eval/results.jsonl` by default. Override the output directory with `OUTPUT_DIR`:
 
 ```bash
-MODEL_PATH=Feng613/SleepVLM-3B bash scripts/run_inference.sh
+MODEL_PATH=models/SleepVLM-3B OUTPUT_DIR=outputs/eval_bf16 bash scripts/run_inference.sh
 ```
 
 ### Evaluation
 
-Compute classification metrics (accuracy, macro-F1, Cohen's kappa, per-class F1, confusion matrix, and rules IoU) from the inference output:
+Compute classification metrics (accuracy, macro-F1, Cohen's kappa, per-class F1, confusion matrix) from the inference results:
 
 ```bash
 python scripts/evaluate.py \
-    --results_jsonl outputs/eval/results.jsonl \
-    --output_dir outputs/eval
+    --results_jsonl outputs/eval_bf16/results.jsonl \
+    --output_dir outputs/eval_bf16
 ```
+
+This produces `MASS-SS1_metrics.json` (per-subject and overall metrics) and `evaluation_results.json`.
 
 ---
 
