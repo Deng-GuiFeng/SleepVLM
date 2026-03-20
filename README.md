@@ -130,12 +130,11 @@ Train the vision encoder to perceive PSG waveform morphology by predicting per-s
 bash scripts/train_phase1.sh
 ```
 
-After training completes, merge the LoRA adapter into the base model. Checkpoints are saved as `outputs/phase1_wpt/checkpoint-{step}` and `outputs/phase1_wpt/epoch-{N}`:
+After training completes, merge the LoRA adapter into the base model:
 
 ```bash
-# Merge the final epoch checkpoint (or a specific step checkpoint)
 python scripts/merge_lora.py \
-    --adapter_path outputs/phase1_wpt/epoch-2 \
+    --adapter_path outputs/phase1_wpt/best \
     --output_path outputs/phase1_wpt/merged
 ```
 
@@ -147,11 +146,11 @@ Fine-tune the model to predict sleep stages with AASM rule citations and reasoni
 MODEL_PATH=outputs/phase1_wpt/merged bash scripts/train_phase2.sh
 ```
 
-After training completes, merge the LoRA adapter to prepare for inference. Select the best checkpoint based on validation performance (see paper for details):
+After training completes, merge the LoRA adapter again to prepare for inference:
 
 ```bash
 python scripts/merge_lora.py \
-    --adapter_path outputs/phase2_sft/checkpoint-9000 \
+    --adapter_path outputs/phase2_sft/best \
     --output_path outputs/phase2_sft/merged
 ```
 
