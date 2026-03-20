@@ -223,7 +223,7 @@ This produces `MASS-SS1_metrics.json` (per-subject and overall metrics) and `eva
 
 | Model | Precision | Size | HuggingFace |
 |-------|-----------|------|-------------|
-| SleepVLM-3B | BF16 | ~6 GB | [Feng613/SleepVLM-3B](https://huggingface.co/Feng613/SleepVLM-3B) |
+| SleepVLM-3B | BF16 | ~7 GB | [Feng613/SleepVLM-3B](https://huggingface.co/Feng613/SleepVLM-3B) |
 | SleepVLM-3B-W4A16 | INT4 | ~3 GB | [Feng613/SleepVLM-3B-W4A16](https://huggingface.co/Feng613/SleepVLM-3B-W4A16) |
 
 ---
