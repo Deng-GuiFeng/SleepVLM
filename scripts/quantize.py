@@ -14,10 +14,10 @@ Workflow:
 Usage:
 
   python scripts/quantize.py \
-      --model_path runs/sft/merged/checkpoint-9000 \
-      --output_dir runs/sft/merged/checkpoint-9000-W4 \
-      --calibration_jsonl data/train.jsonl \
-      --image_base_dir data/images \
+      --model_path outputs/phase2_sft/merged \
+      --output_dir outputs/phase2_sft/quantized_w4a16 \
+      --calibration_jsonl data/phase2_sft/train.jsonl \
+      --image_base_dir data \
       --num_samples 5000
 """
 
