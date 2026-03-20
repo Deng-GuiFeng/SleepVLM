@@ -6,6 +6,6 @@
 
 torch>=2.4.0
 transformers>=4.45.0
-auto-round>=0.4.0
+auto-round>=0.9.5
 qwen-vl-utils>=0.0.8
 accelerate>=0.34.0

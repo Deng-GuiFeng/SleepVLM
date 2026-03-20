@@ -8,12 +8,12 @@
 #
 # Usage:
 #   bash scripts/run_inference.sh
-#   MODEL_PATH=outputs/phase2_sft/lora_merge/best bash scripts/run_inference.sh
+#   MODEL_PATH=outputs/phase2_sft/merged bash scripts/run_inference.sh
 
 set -euo pipefail
 
 # Configuration
-MODEL_PATH="${MODEL_PATH:-"outputs/phase2_sft/lora_merge/best"}"
+MODEL_PATH="${MODEL_PATH:-"outputs/phase2_sft/merged"}"
 SYSTEM_PROMPT="${SYSTEM_PROMPT:-"sleepvlm/prompts/phase2_sft_fine.md"}"
 SPLIT_JSON="${SPLIT_JSON:-"split.json"}"
 IMG_DIR="${IMG_DIR:-"data/MASS"}"

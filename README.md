@@ -130,11 +130,11 @@ Train the vision encoder to perceive PSG waveform morphology by predicting per-s
 bash scripts/train_phase1.sh
 ```
 
-After training completes, merge the LoRA adapter into the base model:
+After training completes, merge the LoRA adapter into the base model. Training saves checkpoints as `epoch-{N}` and `checkpoint-{step}`; select the one with the lowest training loss:
 
 ```bash
 python scripts/merge_lora.py \
-    --adapter_path outputs/phase1_wpt/best \
+    --adapter_path outputs/phase1_wpt/epoch-2 \
     --output_path outputs/phase1_wpt/merged
 ```
 
@@ -150,7 +150,7 @@ After training completes, merge the LoRA adapter again to prepare for inference:
 
 ```bash
 python scripts/merge_lora.py \
-    --adapter_path outputs/phase2_sft/best \
+    --adapter_path outputs/phase2_sft/epoch-15 \
     --output_path outputs/phase2_sft/merged
 ```
 

@@ -3,7 +3,7 @@
 # Uses vLLM for efficient batch inference.
 # Near-deterministic decoding for reproducible results.
 
-model_path: outputs/phase2_sft/lora_merge/best
+model_path: outputs/phase2_sft/merged
 system_prompt: sleepvlm/prompts/phase2_sft_fine.md
 
 # Decoding parameters

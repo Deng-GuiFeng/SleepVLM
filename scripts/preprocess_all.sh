@@ -61,7 +61,7 @@ for SS in SS1 SS2 SS3 SS4 SS5; do
 done
 echo ""
 echo "WPT feature JSONs:"
-for SS in SS1 SS2 SS3 SS4 SS5; do
+for SS in SS2 SS4 SS5; do
     COUNT=$(find "${DATA_DIR}/MASS/${SS}/wpt_features" -name "*.json" 2>/dev/null | wc -l)
     echo "  MASS-${SS}: ${COUNT} files"
 done

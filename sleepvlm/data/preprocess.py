@@ -728,32 +728,15 @@ def main():
                         help="Output directory for band power JSONs")
     parser.add_argument("--num_workers", type=int, default=32,
                         help="Number of parallel workers (default: 32)")
-    parser.add_argument("--skip_render", action="store_true",
-                        help="Skip image rendering, only compute band power")
     args = parser.parse_args()
 
-    if args.skip_render and args.wpt_features_dir is None:
-        parser.error("--skip_render requires --wpt_features_dir")
-
-    if args.skip_render:
-        # Band-power-only mode: reuse run_preprocessing with a flag
-        # We set output_dir but won't actually render
-        print(f"[Skip render] Computing band power only: {args.input_dir}")
-        run_preprocessing(
-            input_dir=args.input_dir,
-            output_dir=args.output_dir,
-            mode=args.mode,
-            band_power_dir=args.wpt_features_dir,
-            num_workers=args.num_workers,
-        )
-    else:
-        run_preprocessing(
-            input_dir=args.input_dir,
-            output_dir=args.output_dir,
-            mode=args.mode,
-            band_power_dir=args.wpt_features_dir,
-            num_workers=args.num_workers,
-        )
+    run_preprocessing(
+        input_dir=args.input_dir,
+        output_dir=args.output_dir,
+        mode=args.mode,
+        band_power_dir=args.wpt_features_dir,
+        num_workers=args.num_workers,
+    )
 
 
 if __name__ == "__main__":

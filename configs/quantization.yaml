@@ -4,7 +4,7 @@
 # keeping activations in 16-bit floating point (W4A16).
 # Vision encoder and lm_head are kept in FP16 precision.
 
-model_path: outputs/phase2_sft/lora_merge/best
+model_path: outputs/phase2_sft/merged
 output_dir: outputs/phase2_sft/quantized_w4a16
 calibration_jsonl: data/phase2_sft/train.jsonl
 image_base_dir: data

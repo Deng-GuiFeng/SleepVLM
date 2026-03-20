@@ -7,7 +7,7 @@ endpoints.
 
 The expected directory layout for each subject is::
 
-    <img_dir>/<center>/<subject_id>/
+    <img_dir>/SS*/images/<subject_id>/
         0_W.png
         1_N1.png
         2_N2.png

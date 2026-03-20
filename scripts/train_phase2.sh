@@ -10,7 +10,7 @@
 #
 # Usage:
 #   bash scripts/train_phase2.sh
-#   MODEL_PATH=outputs/phase1_wpt/lora_merge/best bash scripts/train_phase2.sh
+#   MODEL_PATH=outputs/phase1_wpt/merged bash scripts/train_phase2.sh
 
 set -euo pipefail
 
