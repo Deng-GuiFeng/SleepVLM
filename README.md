@@ -154,6 +154,31 @@ python scripts/merge_lora.py \
     --output_path outputs/phase2_sft/merged
 ```
 
+### 6c. (Optional) W4A16 Post-Training Quantization
+
+Quantize the trained model to 4-bit weights with 16-bit activations (W4A16) using [Intel AutoRound](https://github.com/intel/auto-round) for efficient single-GPU deployment. This reduces model size from ~7 GB to ~3 GB with minimal performance loss.
+
+Quantization requires a separate environment:
+
+```bash
+conda create -n SleepVLM-quant python=3.10 && conda activate SleepVLM-quant
+pip install -r requirements/quantize.txt
+```
+
+Run quantization with stratified calibration data from the SFT training set:
+
+```bash
+python scripts/quantize.py \
+    --model_path outputs/phase2_sft/merged \
+    --output_dir outputs/phase2_sft/quantized_w4a16 \
+    --calibration_jsonl data/phase2_sft/train.jsonl \
+    --image_base_dir data \
+    --num_samples 5000 \
+    --seqlen 3140
+```
+
+The quantized model can be served with vLLM using `--quantization auto-round --dtype float16` (automatically detected by `run_inference.sh`).
+
 ---
 
 ## Inference
