@@ -10,10 +10,10 @@ Training only -- no validation. Periodic and epoch-end checkpoint saves.
 Usage:
     accelerate launch --multi_gpu \
         sleepvlm/training/train.py \
-        --model_path ./models/Qwen2.5-VL-3B-Instruct \
-        --train_file ./data/train.jsonl \
-        --image_root ./data/images \
-        --output_dir ./checkpoints/run1
+        --model_path models/Qwen2.5-VL-3B-Instruct \
+        --train_file data/phase2_sft/train.jsonl \
+        --image_root data \
+        --output_dir outputs/phase2_sft
 """
 
 import os
@@ -585,7 +585,7 @@ def main() -> None:
     )
 
     model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-        args.model_path, dtype=torch.bfloat16
+        args.model_path, torch_dtype=torch.bfloat16
     )
     model.config.use_cache = False
 

@@ -287,7 +287,7 @@ SleepVLM/
 │   ├── inference/
 │   │   └── predict.py                 # Batch inference via vLLM
 │   └── evaluation/
-│       ├── metrics.py                 # Acc, Macro-F1, Kappa, bootstrap CI
+│       ├── metrics.py                 # Acc, Macro-F1, Kappa, per-class F1
 │       └── parse_output.py            # Parse structured model JSON output
 │
 └── scripts/                           # CLI scripts & launch helpers

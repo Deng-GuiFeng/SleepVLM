@@ -17,4 +17,3 @@ scikit-learn
 tqdm
 requests
 multiprocess
-openpyxl

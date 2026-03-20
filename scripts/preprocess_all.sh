@@ -13,7 +13,7 @@
 #
 # For labeled subsets (SS1, SS3), sleep stage annotations are loaded from Base.edf.
 # For unlabeled subsets (SS2, SS4, SS5), epochs are numbered without stage labels.
-# Band power targets are computed for SS2, SS4, SS5 (used in Phase 1 WPT training).
+# WPT features (spectral/amplitude targets) are computed for SS2, SS4, SS5.
 
 set -euo pipefail
 
@@ -60,7 +60,7 @@ for SS in SS1 SS2 SS3 SS4 SS5; do
     echo "  MASS-${SS}: ${COUNT} images"
 done
 echo ""
-echo "Band power JSONs:"
+echo "WPT feature JSONs:"
 for SS in SS1 SS2 SS3 SS4 SS5; do
     COUNT=$(find "${DATA_DIR}/MASS/${SS}/wpt_features" -name "*.json" 2>/dev/null | wc -l)
     echo "  MASS-${SS}: ${COUNT} files"

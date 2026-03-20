@@ -308,7 +308,7 @@ def main():
         "--split_json",
         type=str,
         default="split.json",
-        help="Path to split.json (default: data/split.json)",
+        help="Path to split.json (default: split.json)",
     )
     parser.add_argument(
         "--fine_prompt",

@@ -76,7 +76,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--iters", type=int, default=200,
                         help="AutoRound optimization iterations (default: 200).")
     parser.add_argument("--seqlen", type=int, default=3140,
-                        help="Maximum sequence length for calibration (default: 2048).")
+                        help="Maximum sequence length for calibration (default: 3140).")
     parser.add_argument("--seed", type=int, default=42,
                         help="Random seed for reproducibility (default: 42).")
 

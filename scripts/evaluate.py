@@ -13,8 +13,8 @@ Results are saved as JSON and a human-readable summary is printed to stdout.
 Usage:
 
   python scripts/evaluate.py \
-      --results_jsonl runs/inference/results.jsonl \
-      --output_dir    runs/inference/eval_output
+      --results_jsonl outputs/eval/results.jsonl \
+      --output_dir    outputs/eval
 
 Expected JSONL schema (per line):
   {

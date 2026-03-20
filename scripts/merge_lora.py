@@ -14,19 +14,19 @@ Usage examples:
 
   # Single merge (auto-detect base model from adapter_config.json):
   python scripts/merge_lora.py \
-      --adapter_path runs/sft/checkpoint-5000 \
-      --output_path runs/sft/merged/checkpoint-5000
+      --adapter_path outputs/phase2_sft/best \
+      --output_path outputs/phase2_sft/merged
 
   # Single merge with explicit base model:
   python scripts/merge_lora.py \
       --base_model_path models/Qwen2.5-VL-3B-Instruct \
-      --adapter_path runs/sft/checkpoint-5000 \
-      --output_path runs/sft/merged/checkpoint-5000
+      --adapter_path outputs/phase2_sft/best \
+      --output_path outputs/phase2_sft/merged
 
   # Batch merge (all checkpoint-* dirs):
   python scripts/merge_lora.py --batch \
-      --adapter_dir runs/sft/ \
-      --output_dir runs/sft/merged/
+      --adapter_dir outputs/phase2_sft/ \
+      --output_dir outputs/phase2_sft/merged/
 """
 
 import argparse

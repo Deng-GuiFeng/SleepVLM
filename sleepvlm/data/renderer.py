@@ -35,7 +35,7 @@ Authors
 
 License
 -------
-    CC BY-NC 4.0
+    Apache License 2.0
 """
 
 import os
