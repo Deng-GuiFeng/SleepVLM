@@ -483,7 +483,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--save_steps", type=int, default=1000, help="Save checkpoint every N optimizer update steps")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--num_workers", type=int, default=4, help="DataLoader worker count")
-    parser.add_argument("--log_every", type=int, default=10, help="Log metrics every N micro-steps")
+    parser.add_argument("--log_every", type=int, default=1, help="Log metrics every N micro-steps")
 
     # Image processing
     parser.add_argument("--min_pixels", type=int, default=4 * 28 * 28, help="Min pixels for image resizing (default 3136)")
