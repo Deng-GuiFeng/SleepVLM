@@ -60,7 +60,7 @@ conda create -n SleepVLM python=3.10 && conda activate SleepVLM
 pip install -r requirements/train.txt
 ```
 
-> **Note on environments:** The separate `requirements/` files (train, inference, quantize) are provided because certain system configurations may impose version constraints that cause conflicts between PyTorch, transformers, and vLLM. On most setups, a single environment should work. Since SleepVLM is built on [Qwen2.5-VL](https://github.com/QwenLM/Qwen2.5-VL), the simplest approach is to follow the official Qwen2.5-VL installation guide -- if Qwen2.5-VL runs on your machine, SleepVLM will too. If you do encounter version conflicts, create a dedicated inference environment:
+> **Note on environments:** The separate `requirements/` files (train, inference, quantize) are provided due to version constraints encountered on the authors' hardware. On most modern machines, a single environment should work. Since SleepVLM is built on [Qwen2.5-VL](https://github.com/QwenLM/Qwen2.5-VL), the simplest approach is to follow the official Qwen2.5-VL installation guide -- if Qwen2.5-VL runs on your machine, SleepVLM will too. If you do encounter version conflicts, create a dedicated inference environment:
 >
 > ```bash
 > conda create -n SleepVLM-infer python=3.10 && conda activate SleepVLM-infer
