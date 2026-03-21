@@ -146,11 +146,19 @@ Fine-tune the model to predict sleep stages with AASM rule citations and reasoni
 MODEL_PATH=outputs/phase1_wpt/merged bash scripts/train_phase2.sh
 ```
 
-After training completes, merge the LoRA adapter again to prepare for inference:
+After training completes, select the best checkpoint by evaluating all saved checkpoints on the 12-subject MASS-SS3 validation set. This script automatically merges each LoRA adapter, launches vLLM servers, runs inference on the validation split, and reports per-checkpoint metrics:
+
+```bash
+# Requires the inference environment (vLLM)
+conda activate SleepVLM-infer
+bash scripts/validate_checkpoints.sh
+```
+
+The script prints a summary with the best checkpoint by Cohen's kappa. Then merge the selected checkpoint for inference:
 
 ```bash
 python scripts/merge_lora.py \
-    --adapter_path outputs/phase2_sft/epoch-15 \
+    --adapter_path outputs/phase2_sft/checkpoint-9000 \
     --output_path outputs/phase2_sft/merged
 ```
 
@@ -296,6 +304,7 @@ SleepVLM/
     ├── prepare_sft_data.py            # Prepare Phase 2 training JSONL
     ├── train_phase1.sh                # Launch Phase 1 WPT training
     ├── train_phase2.sh                # Launch Phase 2 SFT training
+    ├── validate_checkpoints.sh        # Evaluate all checkpoints on validation set
     ├── run_inference.sh               # Launch vLLM servers & run inference
     ├── merge_lora.py                  # Merge LoRA adapters into base model
     ├── quantize.py                    # W4A16 post-training quantization
