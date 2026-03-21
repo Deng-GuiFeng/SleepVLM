@@ -18,13 +18,19 @@
 
 ## Overview
 
-**SleepVLM** is a vision-language model that performs automated sleep staging from rendered polysomnography (PSG) waveform images, mimicking how human sleep technologists visually inspect PSG traces. Unlike conventional black-box classifiers, SleepVLM generates a predicted sleep stage (W, N1, N2, N3, R) together with cited AASM rule identifiers and a clinician-readable natural language rationale. The model is built on [Qwen2.5-VL-3B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct) and fine-tuned via LoRA through a two-phase training pipeline on the [MASS](https://borealisdata.ca/dataset.xhtml?persistentId=doi:10.5683/SP3/9MYUCS) dataset.
+**SleepVLM** is a vision-language model that performs automated sleep staging from rendered polysomnography (PSG) waveform images, mimicking how human sleep technologists visually inspect PSG traces. Unlike conventional black-box classifiers, SleepVLM generates a predicted sleep stage (W, N1, N2, N3, R) together with cited AASM rule identifiers and a clinician-readable natural language rationale. The model is built on [Qwen2.5-VL-3B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct) and fine-tuned via LoRA through a two-phase training pipeline on the [MASS](https://borealisdata.ca/dataverse/MASS) dataset.
 
 <p align="center">
   <img src="assets/pipeline.png" alt="SleepVLM Pipeline" width="800">
 </p>
 
 **Figure 1.** SleepVLM pipeline overview. PSG signals are rendered as standardized waveform images, then processed through a two-phase training framework: Phase 1 (waveform-perceptual pre-training) and Phase 2 (rule-grounded supervised fine-tuning).
+
+<p align="center">
+  <img src="assets/qualitative_examples.png" alt="Qualitative Examples" width="800">
+</p>
+
+**Figure 2.** Qualitative examples of rule-grounded model output. Each panel shows three consecutive PSG epoch images with the model's predicted sleep stage, cited AASM rule identifiers, and reasoning. Check marks denote correct classifications; crosses denote misclassifications.
 
 ---
 
@@ -60,7 +66,7 @@ conda create -n SleepVLM python=3.10 && conda activate SleepVLM
 pip install -r requirements/train.txt
 ```
 
-> **Note on environments:** The separate `requirements/` files (train, inference, quantize) are provided due to version constraints encountered on the authors' hardware. On most modern machines, a single environment should work. Since SleepVLM is built on [Qwen2.5-VL](https://github.com/QwenLM/Qwen2.5-VL), the simplest approach is to follow the official Qwen2.5-VL installation guide -- if Qwen2.5-VL runs on your machine, SleepVLM will too. If you do encounter version conflicts, create a dedicated inference environment:
+> **Note on environments:** The separate `requirements/` files (train, inference, quantize) are provided due to version constraints encountered on the authors' hardware. On most modern machines, a single environment should work. Since SleepVLM is built on [Qwen2.5-VL-3B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct), the simplest approach is to follow the official Qwen2.5-VL installation guide -- if Qwen2.5-VL runs on your machine, SleepVLM will too. If you do encounter version conflicts, create a dedicated inference environment:
 >
 > ```bash
 > conda create -n SleepVLM-infer python=3.10 && conda activate SleepVLM-infer
@@ -73,7 +79,7 @@ pip install -r requirements/train.txt
 
 ### 1. Download the MASS dataset
 
-Apply for access and download the EDF files from the [MASS repository](https://borealisdata.ca/dataset.xhtml?persistentId=doi:10.5683/SP3/9MYUCS). Place the EDF files into the following directory structure:
+Apply for access and download the EDF files from the [MASS repository](https://borealisdata.ca/dataverse/MASS). Place the EDF files into the following directory structure:
 
 ```
 data/MASS/
@@ -317,7 +323,7 @@ SleepVLM/
 
 ### MASS (Montreal Archive of Sleep Studies)
 
-This project uses the following MASS subsets. Apply for access at the [MASS repository](https://borealisdata.ca/dataset.xhtml?persistentId=doi:10.5683/SP3/9MYUCS).
+This project uses the following MASS subsets. Apply for access at the [MASS repository](https://borealisdata.ca/dataverse/MASS).
 
 | Subset | Subjects | Role in SleepVLM | Scoring Standard |
 |--------|----------|-------------------|-----------------|
@@ -369,7 +375,7 @@ If you use SleepVLM or MASS-EX in your research, please cite:
 
 - **Code:** [Apache License 2.0](LICENSE)
 - **MASS-EX annotations:** [CC BY-NC 4.0](MASS-EX/LICENSE)
-- **MASS PSG signals:** subject to the [MASS data use agreement](https://borealisdata.ca/dataset.xhtml?persistentId=doi:10.5683/SP3/9MYUCS)
+- **MASS PSG signals:** subject to the [MASS data use agreement](https://borealisdata.ca/dataverse/MASS)
 
 ---
 
@@ -377,4 +383,4 @@ If you use SleepVLM or MASS-EX in your research, please cite:
 
 This work was supported by the National Science and Technology Major Project, the National Natural Science Foundation of China, and the Key R&D Program of Zhejiang. See the paper for full acknowledgements.
 
-We thank the developers of [Qwen2.5-VL](https://github.com/QwenLM/Qwen2.5-VL), [vLLM](https://github.com/vllm-project/vllm), [Intel AutoRound](https://github.com/intel/auto-round), and the [MASS](https://borealisdata.ca/dataset.xhtml?persistentId=doi:10.5683/SP3/9MYUCS) team for making their resources publicly available.
+We thank the developers of [Qwen2.5-VL](https://github.com/QwenLM/Qwen2.5-VL), [vLLM](https://github.com/vllm-project/vllm), [Intel AutoRound](https://github.com/intel/auto-round), and the [MASS](https://borealisdata.ca/dataverse/MASS) team for making their resources publicly available.
