@@ -179,9 +179,15 @@ def find_lora_checkpoints(
 # Helper: patch config.json for vLLM compatibility
 # ---------------------------------------------------------------------------
 
-def fix_config_for_vllm(output_path: str) -> None:
-    """Copy vision-token IDs from ``text_config`` to the top level of
-    ``config.json`` so that vLLM can locate them."""
+def fix_config_for_vllm(output_path: str, source_model_path: str = None) -> None:
+    """Ensure ``config.json`` contains all fields required by vLLM.
+
+    Newer versions of ``transformers`` may nest model parameters inside
+    ``text_config`` when saving, but vLLM expects them at the top level.
+    This function copies missing top-level fields from ``text_config`` and,
+    if a *source_model_path* is provided, fills in any remaining gaps from
+    the original model's config.
+    """
     config_path = Path(output_path) / "config.json"
     if not config_path.exists():
         print(f"[warn] config.json not found at {config_path}")
@@ -190,34 +196,79 @@ def fix_config_for_vllm(output_path: str) -> None:
     with open(config_path, "r") as f:
         config = json.load(f)
 
-    fields = [
-        "vision_start_token_id",
-        "vision_end_token_id",
-        "image_token_id",
-        "video_token_id",
+    # Fields that vLLM reads from the top level.
+    required_fields = [
+        # Vision-token IDs
+        "vision_start_token_id", "vision_end_token_id",
+        "image_token_id", "video_token_id",
+        # Language model architecture fields
+        "vocab_size", "hidden_size", "intermediate_size",
+        "num_hidden_layers", "num_attention_heads", "num_key_value_heads",
+        "max_position_embeddings", "rms_norm_eps", "rope_theta",
+        "hidden_act", "tie_word_embeddings", "use_cache",
+        "bos_token_id", "eos_token_id", "rope_scaling",
+        "sliding_window", "max_window_layers", "use_sliding_window",
+        "attention_dropout", "initializer_range",
     ]
-
-    missing = [fld for fld in fields if fld not in config]
-    if not missing:
-        print("[info] config.json already contains all vision-token fields.")
-        return
 
     text_config = config.get("text_config", {})
     patched: List[str] = []
-    for fld in missing:
-        if fld in text_config:
+
+    for fld in required_fields:
+        if fld in config and config[fld] is not None:
+            continue
+        if fld in text_config and text_config[fld] is not None:
             config[fld] = text_config[fld]
-            patched.append(f"{fld}={text_config[fld]}")
+            patched.append(fld)
+
+    # Fallback: copy from source model config if available.
+    # Also walk back through adapter_config.json chain to find the
+    # original base model, since intermediate merged models may also
+    # have incomplete configs.
+    source_paths = []
+    if source_model_path:
+        source_paths.append(source_model_path)
+    # Try to find the ultimate base model via adapter_config.json
+    adapter_cfg = Path(output_path).parent / "adapter_config.json"
+    if adapter_cfg.exists():
+        try:
+            with open(adapter_cfg) as f:
+                ac = json.load(f)
+            bp = ac.get("base_model_name_or_path", "")
+            if bp and Path(bp).exists():
+                source_paths.append(bp)
+        except Exception:
+            pass
+
+    for src_path in source_paths:
+        src_cfg_path = Path(src_path) / "config.json"
+        if not src_cfg_path.exists():
+            continue
+        with open(src_cfg_path) as f:
+            src_config = json.load(f)
+        for fld in required_fields:
+            if fld not in config or config[fld] is None:
+                if fld in src_config and src_config[fld] is not None:
+                    config[fld] = src_config[fld]
+                    patched.append(fld)
+
+    # Also ensure text_config has the same values (some transformers
+    # versions read from text_config exclusively for VL models).
+    if "text_config" in config and isinstance(config["text_config"], dict):
+        for fld in required_fields:
+            if fld in config and config[fld] is not None:
+                if fld not in config["text_config"] or config["text_config"][fld] is None:
+                    config["text_config"][fld] = config[fld]
+                    if fld not in patched:
+                        patched.append(f"text_config.{fld}")
 
     if patched:
         with open(config_path, "w") as f:
             json.dump(config, f, indent=2)
-        print(f"[info] Patched config.json for vLLM: {', '.join(patched)}")
+        print(f"[info] Patched config.json for vLLM: {len(patched)} fields "
+              f"({', '.join(patched[:5])}{'...' if len(patched) > 5 else ''})")
     else:
-        print(
-            "[warn] Could not patch config.json -- vision-token fields are "
-            "missing from text_config as well."
-        )
+        print("[info] config.json already contains all required fields.")
 
 
 # ---------------------------------------------------------------------------
@@ -278,7 +329,7 @@ def merge_single(
     processor.save_pretrained(output_path)
 
     # Patch config.json for vLLM.
-    fix_config_for_vllm(output_path)
+    fix_config_for_vllm(output_path, source_model_path=resolved_base_path)
 
     # Free the merged model and reload a fresh base for the next round
     # (merge_and_unload modifies the model in place).
@@ -421,7 +472,7 @@ def main() -> None:
         processor.save_pretrained(args.output_path)
 
         # Patch config.json for vLLM.
-        fix_config_for_vllm(args.output_path)
+        fix_config_for_vllm(args.output_path, source_model_path=base_model_path)
 
         print("=" * 60)
         print(f"Merge complete. Output: {args.output_path}")
