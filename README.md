@@ -365,7 +365,7 @@ If you use SleepVLM or MASS-EX in your research, please cite:
   year      = {2026},
   publisher = {Zenodo},
   version   = {1.0.0},
-  doi       = {}
+  doi       = {10.5281/zenodo.19087197}
 }
 ```
 
