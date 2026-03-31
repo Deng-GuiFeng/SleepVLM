@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="#">Paper</a> &nbsp;|&nbsp;
+  <a href="https://arxiv.org/abs/2603.26738">Paper</a> &nbsp;|&nbsp;
   <a href="https://github.com/Deng-GuiFeng/MASS-EX">MASS-EX Dataset</a> &nbsp;|&nbsp;
   <a href="https://huggingface.co/collections/Feng613/sleepvlm">Model Weights</a>
 </p>
@@ -352,11 +352,15 @@ If you use SleepVLM or MASS-EX in your research, please cite:
 
 ```bibtex
 @article{deng2026sleepvlm,
-  author  = {Deng, Guifeng and Wang, Pan and Wang, Jiquan and Li, Tao and Jiang, Haiteng},
-  title   = {{SleepVLM}: Explainable and Rule-Grounded Sleep Staging
-             via a Vision-Language Model},
-  journal = {},
-  year    = {2026}
+  author        = {Deng, Guifeng and Wang, Pan and Wang, Jiquan and Rao, Shuying and Xie, Junyi and Guo, Wanjun and Li, Tao and Jiang, Haiteng},
+  title         = {{SleepVLM}: Explainable and Rule-Grounded Sleep Staging
+                   via a Vision-Language Model},
+  journal       = {arXiv preprint arXiv:2603.26738},
+  year          = {2026},
+  eprint        = {2603.26738},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+  doi           = {10.48550/arXiv.2603.26738}
 }
 
 @dataset{deng2026massex,
